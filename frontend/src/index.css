@@ -1,0 +1,191 @@
+@import "tailwindcss";
+/* In the components layer, so a utility class on an element can still adjust a pattern rule. */
+@import "./generative-ui/generative.css" layer(components);
+
+/*
+ * Two independent token sets:
+ *   --app-*  the workspace application itself (chrome). Follows the user's preference.
+ *   --g-*    the generated UI. Set per document by ThemeProvider from validated tokens.
+ * Keeping them apart means a generated theme can never restyle the editor around it.
+ */
+:root {
+  --app-bg: #f6f6f7;
+  --app-panel: #ffffff;
+  --app-raised: #ffffff;
+  --app-border: #e4e4e7;
+  --app-border-strong: #d4d4d8;
+  --app-fg: #18181b;
+  --app-muted: #71717a;
+  --app-subtle: #f4f4f5;
+  /* Primary actions are near-black; the accent is kept for selection and for
+     committing work (apply, save, restore). See docs/DESIGN.md. */
+  --app-primary: #18181b;
+  --app-primary-hover: #27272a;
+  --app-primary-fg: #ffffff;
+  --app-accent: #4f46e5;
+  --app-accent-fg: #ffffff;
+  --app-accent-soft: #eef2ff;
+  --app-overlay: rgb(24 24 27 / 0.2);
+  --app-shadow-float: 0 2px 4px rgb(0 0 0 / 0.04), 0 1px 2px rgb(0 0 0 / 0.02);
+  --app-shadow-modal: 0 12px 24px -4px rgb(0 0 0 / 0.08), 0 4px 8px -2px rgb(0 0 0 / 0.04);
+  --app-danger: #dc2626;
+  --app-success: #15803d;
+  --app-warning: #b45309;
+  --app-canvas: #ececef;
+  color-scheme: light;
+}
+
+:root[data-chrome="dark"] {
+  --app-bg: #0e0e10;
+  --app-panel: #17171a;
+  --app-raised: #1f1f23;
+  --app-border: #2a2a2f;
+  --app-border-strong: #3a3a41;
+  --app-fg: #f4f4f5;
+  --app-muted: #a1a1aa;
+  --app-subtle: #212126;
+  --app-primary: #f4f4f5;
+  --app-primary-hover: #e4e4e7;
+  --app-primary-fg: #18181b;
+  --app-accent: #818cf8;
+  --app-accent-fg: #0b0b12;
+  --app-accent-soft: #23234a;
+  --app-overlay: rgb(0 0 0 / 0.5);
+  --app-shadow-float: 0 2px 4px rgb(0 0 0 / 0.3), 0 1px 2px rgb(0 0 0 / 0.2);
+  --app-shadow-modal: 0 12px 24px -4px rgb(0 0 0 / 0.5), 0 4px 8px -2px rgb(0 0 0 / 0.3);
+  --app-danger: #f87171;
+  --app-success: #4ade80;
+  --app-warning: #fbbf24;
+  --app-canvas: #0a0a0c;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-app-bg: var(--app-bg);
+  --color-app-panel: var(--app-panel);
+  --color-app-raised: var(--app-raised);
+  --color-app-border: var(--app-border);
+  --color-app-border-strong: var(--app-border-strong);
+  --color-app-fg: var(--app-fg);
+  --color-app-muted: var(--app-muted);
+  --color-app-subtle: var(--app-subtle);
+  --color-app-primary: var(--app-primary);
+  --color-app-primary-hover: var(--app-primary-hover);
+  --color-app-primary-fg: var(--app-primary-fg);
+  --color-app-overlay: var(--app-overlay);
+  --shadow-app-float: var(--app-shadow-float);
+  --shadow-app-modal: var(--app-shadow-modal);
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --color-app-accent: var(--app-accent);
+  --color-app-accent-fg: var(--app-accent-fg);
+  --color-app-accent-soft: var(--app-accent-soft);
+  --color-app-danger: var(--app-danger);
+  --color-app-success: var(--app-success);
+  --color-app-warning: var(--app-warning);
+  --color-app-canvas: var(--app-canvas);
+
+  --color-g-primary: var(--g-primary);
+  --color-g-primary-fg: var(--g-primary-fg);
+  --color-g-secondary: var(--g-secondary);
+  --color-g-secondary-fg: var(--g-secondary-fg);
+  --color-g-bg: var(--g-bg);
+  --color-g-surface: var(--g-surface);
+  --color-g-fg: var(--g-fg);
+  --color-g-muted: var(--g-muted);
+  --color-g-muted-fg: var(--g-muted-fg);
+  --color-g-border: var(--g-border);
+  --color-g-destructive: var(--g-destructive);
+  --color-g-destructive-fg: var(--g-destructive-fg);
+  --color-g-success: var(--g-success);
+  --color-g-warning: var(--g-warning);
+  --color-g-tone: var(--tone, var(--g-primary));
+  --radius-g: var(--g-radius);
+  --shadow-g: var(--g-shadow);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--app-bg);
+  color: var(--app-fg);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  letter-spacing: -0.005em;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--app-accent);
+  outline-offset: 2px;
+}
+
+/* --- Generated UI: layout engine ------------------------------------------- */
+
+.g-root {
+  container: g-canvas / inline-size;
+  background: var(--g-bg);
+  color: var(--g-fg);
+  font-family: var(--g-font);
+  font-size: var(--g-font-size);
+  line-height: 1.5;
+}
+
+.g-root :focus-visible {
+  outline-color: var(--g-primary);
+}
+
+/* Every container is a 12-column flow grid; a child's span is its width intent. */
+.g-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--g-gap);
+}
+
+.g-cell {
+  grid-column: span var(--span, 12) / span var(--span, 12);
+  min-width: 0;
+}
+
+/* Responsive behaviour belongs to the layout engine, not to the document. */
+@container g-canvas (max-width: 720px) {
+  .g-cell {
+    grid-column: span var(--span-md, 12) / span var(--span-md, 12);
+  }
+}
+
+@container g-canvas (max-width: 480px) {
+  .g-cell {
+    grid-column: span 12 / span 12;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes app-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.app-skeleton {
+  background: linear-gradient(90deg, var(--app-subtle) 25%, var(--app-border) 37%, var(--app-subtle) 63%);
+  background-size: 400% 100%;
+  animation: app-shimmer 1.4s ease infinite;
+  border-radius: 6px;
+}

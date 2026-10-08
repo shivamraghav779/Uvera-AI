@@ -1,0 +1,59 @@
+# Local stack: PostgreSQL + migrations + API + web app.
+#   docker compose up --build
+# Then open http://localhost:5173 (API docs: http://localhost:8000/docs).
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: generative_ui
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d generative_ui"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  migrate:
+    build: .
+    command: ["alembic", "upgrade", "head"]
+    env_file:
+      - path: .env
+        required: false
+    environment: &backend_environment
+      APP_ENV: development
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/generative_ui
+      CORS_ORIGINS: http://localhost:5173
+    depends_on:
+      db:
+        condition: service_healthy
+
+  backend:
+    build: .
+    env_file:
+      - path: .env
+        required: false
+    environment: *backend_environment
+    ports:
+      - "8000:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  frontend:
+    build:
+      context: ../frontend
+      args:
+        # Used by the browser, so it is the address of the API as seen from the host.
+        VITE_API_BASE_URL: http://localhost:8000
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

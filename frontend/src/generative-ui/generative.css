@@ -1,0 +1,660 @@
+/*
+ * Styles of the generative runtime: everything a generated UI needs that is not
+ * a utility class. All of it is driven by theme tokens (the --g-* variables set
+ * by ThemeProvider) and by token *names* exposed as data attributes
+ * (data-surface, data-motion, data-gradient, data-effects). A document can pick
+ * tokens; it can never supply CSS.
+ */
+
+/* --- Typography ------------------------------------------------------------- */
+
+.g-root :where(h1, h2, h3, h4),
+.g-heading {
+  font-family: var(--g-heading-font);
+  font-weight: var(--g-heading-weight);
+  letter-spacing: var(--g-heading-tracking);
+}
+
+/* The opening statement of a marketing screen. */
+.g-display {
+  font-size: calc(clamp(2rem, 3.6cqw + 1rem, 3.5rem) * var(--g-heading-scale));
+  line-height: 1.04;
+  text-wrap: balance;
+}
+
+.g-h2 {
+  font-size: calc(clamp(1.45rem, 1.6cqw + 1rem, 2.1rem) * var(--g-heading-scale));
+  line-height: 1.12;
+  text-wrap: balance;
+}
+
+/* Small headings grow less than display type when the scale goes up. */
+.g-h3 {
+  font-size: calc(1.12em * (1 + (var(--g-heading-scale) - 1) * 0.35));
+  line-height: 1.25;
+}
+
+.g-eyebrow {
+  font-family: var(--g-font);
+  font-size: 0.76em;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--g-primary);
+}
+
+.g-lead {
+  font-size: 1.12em;
+  line-height: 1.55;
+  color: var(--g-muted-fg);
+  text-wrap: pretty;
+}
+
+/* --- Surfaces ----------------------------------------------------------------
+ * One class draws every card-like surface. The theme chooses the treatment for
+ * the whole UI; a component can ask for another with style.surface.
+ */
+
+.g-root,
+[data-surface] {
+  --g-card-bg: var(--g-surface);
+  --g-card-border: var(--g-border);
+  --g-card-border-width: 1px;
+  --g-card-shadow: var(--g-shadow);
+  --g-card-backdrop: none;
+}
+
+.g-root[data-surface="flat"],
+.g-card[data-surface="flat"] {
+  --g-card-bg: color-mix(in srgb, var(--g-muted) 70%, var(--g-surface));
+  --g-card-border: transparent;
+  --g-card-shadow: none;
+}
+
+.g-root[data-surface="elevated"],
+.g-card[data-surface="elevated"] {
+  --g-card-border: color-mix(in srgb, var(--g-border) 45%, transparent);
+  --g-card-shadow: 0 1px 2px rgb(0 0 0 / 0.05), 0 10px 28px -6px rgb(0 0 0 / 0.13);
+}
+
+.g-root[data-surface="glass"],
+.g-card[data-surface="glass"] {
+  --g-card-bg: color-mix(in srgb, var(--g-surface) 62%, transparent);
+  --g-card-border: color-mix(in srgb, var(--g-fg) 14%, transparent);
+  --g-card-shadow: 0 8px 30px -10px rgb(0 0 0 / 0.25);
+  --g-card-backdrop: blur(18px) saturate(1.35);
+}
+
+.g-root[data-surface="brutal"],
+.g-card[data-surface="brutal"] {
+  --g-card-border: var(--g-fg);
+  --g-card-border-width: 2px;
+  --g-card-shadow: 4px 4px 0 var(--g-fg);
+}
+
+.g-card[data-surface="bordered"] {
+  --g-card-shadow: none;
+}
+
+.g-card[data-surface="minimal"] {
+  --g-card-bg: transparent;
+  --g-card-border: transparent;
+  --g-card-shadow: none;
+}
+
+.g-card[data-surface="featured"] {
+  --g-card-bg: var(--g-primary-soft);
+  --g-card-border: color-mix(in srgb, var(--g-primary) 40%, transparent);
+}
+
+.g-card {
+  border: var(--g-card-border-width) solid var(--g-card-border);
+  border-radius: var(--g-radius);
+  background: var(--g-card-bg);
+  box-shadow: var(--g-card-shadow);
+  backdrop-filter: var(--g-card-backdrop);
+}
+
+.g-card[data-surface="interactive"],
+.g-lift {
+  transition:
+    transform var(--g-duration-normal) var(--g-ease-standard),
+    box-shadow var(--g-duration-normal) var(--g-ease-standard),
+    border-color var(--g-duration-fast) var(--g-ease-standard);
+}
+
+.g-card[data-surface="interactive"]:hover,
+.g-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 2px 4px rgb(0 0 0 / 0.06), 0 16px 32px -10px rgb(0 0 0 / 0.2);
+  border-color: color-mix(in srgb, var(--g-primary) 45%, var(--g-border));
+}
+
+.g-root[data-surface="brutal"] .g-lift:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--g-fg);
+}
+
+.g-root[data-motion="none"] .g-lift:hover {
+  transform: none;
+}
+
+/* --- Gradients ----------------------------------------------------------------
+ * Whether accent gradients appear is a theme decision (theme.gradient).
+ */
+
+.g-root {
+  --g-gradient: linear-gradient(135deg, var(--g-primary), var(--g-accent));
+  --g-accent-fill: var(--g-primary);
+}
+
+.g-root:not([data-gradient="none"]) {
+  --g-accent-fill: var(--g-gradient);
+}
+
+.g-gradient-text {
+  color: var(--g-primary);
+}
+
+.g-root[data-gradient="vivid"] .g-gradient-text {
+  background: var(--g-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* --- Screens and bands ---------------------------------------------------------
+ * A contained screen is a centred column; a full screen runs edge to edge and
+ * each pattern centres its own content, so backgrounds can bleed.
+ */
+
+.g-screen {
+  margin-inline: auto;
+  width: 100%;
+  padding: calc(var(--g-gap) * 1.5) clamp(16px, 3cqw, 40px) calc(var(--g-gap) * 3);
+}
+
+.g-screen[data-width="narrow"] {
+  max-width: 760px;
+}
+.g-screen[data-width="contained"] {
+  max-width: 1240px;
+}
+.g-screen[data-width="wide"] {
+  max-width: 1560px;
+}
+.g-screen[data-width="full"] {
+  max-width: none;
+  padding: 0;
+}
+
+.g-screen[data-width="full"] > .g-screen-body > .g-grid {
+  gap: 0;
+}
+
+.g-container {
+  margin-inline: auto;
+  width: 100%;
+}
+
+.g-screen[data-width="full"] .g-band {
+  padding-block: clamp(48px, 7cqw, 112px);
+}
+.g-screen[data-width="full"] .g-band[data-density="compact"] {
+  padding-block: clamp(28px, 4cqw, 56px);
+}
+.g-screen[data-width="full"] .g-container {
+  max-width: 1200px;
+  padding-inline: clamp(20px, 4cqw, 56px);
+}
+
+/* Inside an application screen a band is just its content. */
+.g-band {
+  position: relative;
+  isolation: isolate;
+}
+
+.g-band[data-tone="muted"] {
+  background: var(--g-muted);
+}
+.g-band[data-tone="inverse"] {
+  background: var(--g-fg);
+  color: var(--g-bg);
+  --g-muted-fg: color-mix(in srgb, var(--g-bg) 68%, var(--g-fg));
+  --g-border: color-mix(in srgb, var(--g-bg) 22%, var(--g-fg));
+}
+.g-band[data-tone="primary"] {
+  background: var(--g-accent-fill);
+  color: var(--g-primary-fg);
+  --g-muted-fg: color-mix(in srgb, var(--g-primary-fg) 78%, var(--g-primary));
+}
+
+/* --- Effects ------------------------------------------------------------------
+ * Requested per component with style.effects; each is a class on its band.
+ */
+
+.g-fx-layer {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.g-fx-gradient_mesh .g-fx-layer::before,
+.g-fx-animated_gradient .g-fx-layer::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(42% 46% at 18% 22%, color-mix(in srgb, var(--g-primary) 36%, transparent), transparent 70%),
+    radial-gradient(40% 44% at 82% 18%, color-mix(in srgb, var(--g-accent) 32%, transparent), transparent 72%),
+    radial-gradient(46% 50% at 62% 88%, color-mix(in srgb, var(--g-success) 20%, transparent), transparent 70%);
+  filter: blur(36px);
+}
+
+@keyframes g-drift {
+  0% {
+    transform: translate3d(-3%, -2%, 0) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translate3d(3%, 3%, 0) rotate(4deg) scale(1.08);
+  }
+  100% {
+    transform: translate3d(-3%, -2%, 0) rotate(0deg) scale(1);
+  }
+}
+
+.g-fx-animated_gradient .g-fx-layer::before {
+  animation: g-drift 18s var(--g-ease-standard) infinite;
+}
+
+.g-fx-grid .g-fx-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(color-mix(in srgb, var(--g-fg) 16%, transparent) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse 75% 70% at 50% 35%, #000 30%, transparent 78%);
+}
+
+/* Fine grain; an inline SVG turbulence, no external file. */
+.g-fx-noise .g-fx-layer {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0.22 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  mix-blend-mode: overlay;
+  opacity: 0.55;
+}
+
+/* A soft light under the pointer; --spot-x/y are set by useSpotlight. */
+.g-fx-spotlight .g-fx-layer {
+  background: radial-gradient(
+    520px circle at var(--spot-x, 50%) var(--spot-y, 0%),
+    color-mix(in srgb, var(--g-primary) 20%, transparent),
+    transparent 62%
+  );
+  opacity: var(--spot-on, 0.55);
+  transition: opacity var(--g-duration-slow) var(--g-ease-standard);
+}
+
+.g-fx-glow .g-glow-target,
+.g-fx-glow.g-card {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--g-primary) 35%, transparent),
+    0 18px 60px -12px color-mix(in srgb, var(--g-primary) 55%, transparent);
+}
+
+.g-fx-glass .g-card,
+.g-fx-glass.g-card {
+  --g-card-bg: color-mix(in srgb, var(--g-surface) 60%, transparent);
+  --g-card-border: color-mix(in srgb, var(--g-fg) 14%, transparent);
+  --g-card-backdrop: blur(18px) saturate(1.35);
+}
+
+/* Content rises into view the first time it is seen (class set by useReveal). */
+.g-fx-reveal [data-reveal] {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity var(--g-duration-slow) var(--g-ease-enter),
+    transform var(--g-duration-slow) var(--g-ease-enter);
+  transition-delay: calc(var(--reveal-index, 0) * 70ms);
+}
+.g-fx-reveal[data-revealed] [data-reveal] {
+  opacity: 1;
+  transform: none;
+}
+.g-root[data-motion="none"] .g-fx-reveal [data-reveal] {
+  opacity: 1;
+  transform: none;
+}
+
+.g-fx-hover_lift .g-card {
+  transition:
+    transform var(--g-duration-normal) var(--g-ease-standard),
+    box-shadow var(--g-duration-normal) var(--g-ease-standard);
+}
+.g-fx-hover_lift .g-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 2px 4px rgb(0 0 0 / 0.06), 0 18px 36px -12px rgb(0 0 0 / 0.22);
+}
+.g-root[data-motion="none"] .g-fx-hover_lift .g-card:hover {
+  transform: none;
+}
+
+@keyframes g-marquee {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.g-marquee {
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+}
+.g-marquee-track {
+  display: flex;
+  width: max-content;
+  gap: var(--marquee-gap, 3.5rem);
+  padding-right: var(--marquee-gap, 3.5rem);
+  animation: g-marquee var(--marquee-duration, 36s) linear infinite;
+}
+.g-marquee:hover .g-marquee-track {
+  animation-play-state: paused;
+}
+.g-root[data-motion="none"] .g-marquee-track {
+  animation: none;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: auto;
+}
+
+/* --- Images ---------------------------------------------------------------- */
+
+.g-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: var(--g-muted);
+}
+
+/* Shown where an image is planned but not available: never a broken icon. */
+.g-image-fallback {
+  background:
+    radial-gradient(60% 70% at 20% 20%, color-mix(in srgb, var(--g-primary) 30%, transparent), transparent 70%),
+    radial-gradient(55% 65% at 85% 80%, color-mix(in srgb, var(--g-accent) 28%, transparent), transparent 70%),
+    var(--g-muted);
+}
+
+/* --- Application shell ------------------------------------------------------- */
+
+.g-app {
+  display: grid;
+  /* One column that can shrink: wide content scrolls inside itself, never the page. */
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 100%;
+  background: var(--g-bg);
+}
+
+.g-app[data-nav="sidebar"] {
+  grid-template-columns: 248px minmax(0, 1fr);
+}
+
+.g-app-sidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: 100vh;
+  max-height: 100%;
+  min-height: 420px;
+  padding: 18px 12px;
+  border-right: 1px solid var(--g-border);
+  background: color-mix(in srgb, var(--g-surface) 82%, var(--g-bg));
+}
+
+.g-app-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-height: 60px;
+  padding: 10px clamp(16px, 3cqw, 40px);
+  border-bottom: 1px solid var(--g-border);
+  background: color-mix(in srgb, var(--g-bg) 86%, transparent);
+  backdrop-filter: blur(14px) saturate(1.2);
+}
+
+.g-app[data-nav="minimal"] .g-app-topbar {
+  border-bottom-color: transparent;
+  background: color-mix(in srgb, var(--g-bg) 70%, transparent);
+}
+
+.g-app-bottombar {
+  position: sticky;
+  bottom: 0;
+  z-index: 30;
+  display: flex;
+  justify-content: space-around;
+  gap: 4px;
+  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--g-border);
+  background: color-mix(in srgb, var(--g-surface) 92%, transparent);
+  backdrop-filter: blur(14px);
+}
+
+.g-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: calc(var(--g-radius) * 0.8);
+  padding: 8px 10px;
+  font-size: 0.95em;
+  font-weight: 500;
+  color: var(--g-muted-fg);
+  transition:
+    background var(--g-duration-fast) var(--g-ease-standard),
+    color var(--g-duration-fast) var(--g-ease-standard);
+}
+.g-nav-link:hover {
+  background: var(--g-muted);
+  color: var(--g-fg);
+}
+.g-nav-link[aria-current="page"] {
+  background: var(--g-primary-soft);
+  color: var(--g-primary);
+}
+.g-root[data-surface="brutal"] .g-nav-link[aria-current="page"] {
+  background: var(--g-fg);
+  color: var(--g-bg);
+}
+
+/* The sidebar becomes a top bar when the canvas is narrow. */
+@container g-canvas (max-width: 860px) {
+  .g-app[data-nav="sidebar"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .g-app-sidebar {
+    position: sticky;
+    z-index: 30;
+    flex-direction: row;
+    align-items: center;
+    height: auto;
+    min-height: 0;
+    overflow-x: auto;
+    padding: 8px 12px;
+    border-right: 0;
+    border-bottom: 1px solid var(--g-border);
+  }
+  .g-app-sidebar .g-nav-group,
+  .g-app-sidebar .g-nav-footer {
+    display: none;
+  }
+  .g-app-sidebar .g-nav-link {
+    white-space: nowrap;
+  }
+  .g-hide-narrow {
+    display: none !important;
+  }
+}
+
+@container g-canvas (min-width: 861px) {
+  .g-show-narrow {
+    display: none !important;
+  }
+}
+
+/* --- Pattern layout helpers ---------------------------------------------------
+ * Responsive behaviour of patterns lives here, next to the layout engine's own
+ * rules, so it follows the canvas width (device preview) and not the window.
+ */
+
+.g-split {
+  display: grid;
+  gap: clamp(24px, 4cqw, 64px);
+  align-items: center;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+}
+.g-split[data-ratio="even"] {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+.g-split[data-ratio="5-7"] {
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+}
+.g-split[data-ratio="4-8"] {
+  grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+}
+
+.g-cols {
+  display: grid;
+  gap: var(--g-gap);
+  grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr));
+}
+
+@container g-canvas (max-width: 900px) {
+  .g-cols {
+    grid-template-columns: repeat(min(var(--cols, 3), 2), minmax(0, 1fr));
+  }
+  .g-split,
+  .g-split[data-ratio] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .g-split > [data-order-narrow="first"] {
+    order: -1;
+  }
+}
+
+@container g-canvas (max-width: 560px) {
+  .g-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .g-cols[data-keep="2"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Bento: a few cells are twice as wide. */
+.g-bento > [data-wide] {
+  grid-column: span 2;
+}
+@container g-canvas (max-width: 560px) {
+  .g-bento > [data-wide] {
+    grid-column: span 1;
+  }
+}
+
+.g-scroll-x {
+  display: flex;
+  gap: var(--g-gap);
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+}
+.g-scroll-x > * {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+}
+
+.g-masonry {
+  column-count: var(--cols, 3);
+  column-gap: var(--g-gap);
+}
+.g-masonry > * {
+  break-inside: avoid;
+  margin-bottom: var(--g-gap);
+}
+@container g-canvas (max-width: 900px) {
+  .g-masonry {
+    column-count: 2;
+  }
+}
+@container g-canvas (max-width: 560px) {
+  .g-masonry {
+    column-count: 1;
+  }
+}
+
+/* Editorial: the first item of every three takes the whole row. */
+.g-editorial {
+  display: grid;
+  gap: clamp(20px, 3cqw, 48px);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.g-editorial > :nth-child(3n + 1) {
+  grid-column: span 2;
+}
+@container g-canvas (max-width: 700px) {
+  .g-editorial {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .g-editorial > :nth-child(3n + 1) {
+    grid-column: span 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .g-marquee-track,
+  .g-fx-animated_gradient .g-fx-layer::before {
+    animation: none;
+  }
+  .g-fx-reveal [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* --- Bands inside a contained screen -------------------------------------------
+ * A toned or pictured band there is a panel, not an edge-to-edge strip.
+ */
+.g-screen:not([data-width="full"]) .g-band[data-tone],
+.g-screen:not([data-width="full"]) .g-band-boxed[data-tone],
+.g-root > .g-band[data-tone] {
+  overflow: hidden;
+  border-radius: var(--g-radius);
+  padding: calc(var(--g-pad) * 1.75);
+}
+
+.g-app-topbar .g-nav-link {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* A screen fades in when the route changes. */
+@keyframes g-screen-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.g-screen {
+  animation: g-screen-in var(--g-duration-normal) var(--g-ease-standard);
+}
+.g-root[data-motion="none"] .g-screen {
+  animation: none;
+}

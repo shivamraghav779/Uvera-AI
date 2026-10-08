@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+*.local
+tests/e2e/screenshots/
+.DS_Store
